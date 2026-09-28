@@ -16,6 +16,19 @@ const GAMES = [
   "Other",
 ];
 
+// Generate every 15-minute slot across 24 hours
+// Stored as "HH:MM" (24-hour), displayed as "h:MM AM/PM"
+const TIME_SLOTS: { value: string; label: string }[] = [];
+for (let h = 0; h < 24; h++) {
+  for (const m of [0, 15, 30, 45]) {
+    const value = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    const hour12 = h % 12 === 0 ? 12 : h % 12;
+    const ampm = h < 12 ? "AM" : "PM";
+    const label = `${hour12}:${String(m).padStart(2, "0")} ${ampm}`;
+    TIME_SLOTS.push({ value, label });
+  }
+}
+
 const inputStyle: React.CSSProperties = {
   display: "block",
   width: "100%",
@@ -37,16 +50,19 @@ export default function NewSession() {
   const [game, setGame] = useState(GAMES[0]);
   const [customGame, setCustomGame] = useState("");
   const [description, setDescription] = useState("");
-  const [scheduledAt, setScheduledAt] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("18:00");
   const [maxPlayers, setMaxPlayers] = useState(4);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Combine the separate date + time fields into one ISO string
+    const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
     const session = await createSession.mutateAsync({
       title,
       game: game === "Other" ? customGame : game,
       description,
-      scheduledAt: new Date(scheduledAt).toISOString(),
+      scheduledAt,
       maxPlayers,
     });
     navigate(`/sessions/${session.id}`);
@@ -95,16 +111,39 @@ export default function NewSession() {
           </label>
         )}
 
-        <label style={labelStyle}>
-          Date & Time
-          <input
-            type="datetime-local"
-            required
-            value={scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
-            style={inputStyle}
-          />
-        </label>
+        {/* Date and Time as separate fields */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+          <label style={labelStyle}>
+            Date
+            <input
+              type="date"
+              required
+              value={date}
+              min={new Date().toISOString().split("T")[0]}
+              onChange={(e) => setDate(e.target.value)}
+              style={{
+                ...inputStyle,
+                colorScheme: "dark",
+              }}
+            />
+          </label>
+
+          <label style={labelStyle}>
+            Time
+            <select
+              required
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              style={inputStyle}
+            >
+              {TIME_SLOTS.map(({ value, label }) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
 
         <label style={labelStyle}>
           Max Players
