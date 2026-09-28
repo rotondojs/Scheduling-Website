@@ -22,7 +22,7 @@ export default function SideBarNav() {
         <NavLink
           key={to}
           to={to}
-          end={to === "/"}
+          end
           style={({ isActive }) => ({
             display: "block",
             padding: "0.6rem 0.75rem",
