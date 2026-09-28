@@ -16,6 +16,22 @@ const GAMES = [
   "Other",
 ];
 
+function getDefaultDateTime(): { date: string; time: string } {
+  const now = new Date();
+  let h = now.getHours();
+  let m = now.getMinutes();
+  const remainder = m % 15;
+  if (remainder !== 0) m += 15 - remainder;
+  if (m >= 60) { m -= 60; h += 1; }
+  const nextDay = h >= 24;
+  if (nextDay) h = 0;
+  const dateObj = nextDay ? new Date(now.getTime() + 86400000) : now;
+  return {
+    date: dateObj.toISOString().split("T")[0],
+    time: `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+  };
+}
+
 // Generate every 15-minute slot across 24 hours
 // Stored as "HH:MM" (24-hour), displayed as "h:MM AM/PM"
 const TIME_SLOTS: { value: string; label: string }[] = [];
@@ -50,8 +66,9 @@ export default function NewSession() {
   const [game, setGame] = useState(GAMES[0]);
   const [customGame, setCustomGame] = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("18:00");
+  const defaultDT = getDefaultDateTime();
+  const [date, setDate] = useState(defaultDT.date);
+  const [time, setTime] = useState(defaultDT.time);
   const [maxPlayers, setMaxPlayers] = useState(4);
 
   async function handleSubmit(e: React.FormEvent) {

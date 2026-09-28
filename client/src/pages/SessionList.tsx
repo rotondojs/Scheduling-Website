@@ -9,6 +9,7 @@ export default function SessionList() {
   const [showPast, setShowPast] = useState(false);
 
   const filtered = (sessions ?? [])
+    .filter((s) => s?.title && s?.game)
     .filter((s) => {
       const matchesText =
         s.title.toLowerCase().includes(filter.toLowerCase()) ||

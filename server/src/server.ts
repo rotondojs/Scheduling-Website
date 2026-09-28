@@ -2,8 +2,8 @@
 
 import "dotenv/config";
 import { app, httpServer } from "./app.ts";
-import { setDbInitializer } from "./keyv.ts";
-import { FileStore } from "./fileStore.ts";
+import { setDbInitializer, setDirectRepoInitializer } from "./keyv.ts";
+import { createFileRepo } from "./fileStore.ts";
 import KeyvMongo from "@keyv/mongo";
 import { Keyv } from "keyv";
 
@@ -17,9 +17,7 @@ if (MONGO_URI) {
   );
 } else {
   // Development: persist to local JSON files so data survives server restarts
-  setDbInitializer(<T>(name: string) =>
-    new Keyv<T>({ store: new FileStore<T>(name) })
-  );
+  setDirectRepoInitializer(<T>(name: string) => createFileRepo<T>(name));
   console.log("Using local file storage (dev-data/)");
 }
 

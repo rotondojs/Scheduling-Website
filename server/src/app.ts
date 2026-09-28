@@ -6,6 +6,7 @@ import * as http from "node:http";
 import * as user from "./controllers/user.controller.ts";
 import * as session from "./controllers/session.controller.ts";
 import * as stats from "./controllers/stats.controller.ts";
+import * as group from "./controllers/group.controller.ts";
 
 export const app = express();
 export const httpServer = http.createServer(app);
@@ -39,6 +40,14 @@ app.use(
         .get("/fortnite", stats.getFortniteStats)
         .get("/steam", stats.getSteamStats)
         .get("/apex", stats.getApexStats),
+    )
+    .use(
+      "/group",
+      express.Router()
+        .post("/create", group.postCreate)
+        .get("/list", group.getList)
+        .get("/:id/messages", group.getMessages)
+        .post("/:id/message", group.postMessage),
     ),
 );
 
@@ -51,6 +60,14 @@ io.on("connection", (socket) => {
 
   socket.on("sessionUnwatch", (sessionId: string) => {
     socket.leave(`session:${sessionId}`);
+  });
+
+  socket.on("groupWatch", (groupId: string) => {
+    socket.join(`group:${groupId}`);
+  });
+
+  socket.on("groupUnwatch", (groupId: string) => {
+    socket.leave(`group:${groupId}`);
   });
 
   socket.on("disconnect", () => {

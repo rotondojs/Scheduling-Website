@@ -58,74 +58,76 @@ export default function Login({ setAuth }: Props) {
           {form.isSignup ? "Create an Account" : "Sign In"}
         </h2>
 
-        {form.isSignup && (
+        <form onSubmit={(e) => { e.preventDefault(); form.submit(); }}>
+          {form.isSignup && (
+            <div style={{ marginBottom: "1rem" }}>
+              <label style={{ fontSize: "0.875rem" }}>
+                Display Name
+                <input
+                  value={form.display}
+                  onChange={(e) => form.setDisplay(e.target.value)}
+                  style={inputStyle}
+                  placeholder="Your name"
+                />
+              </label>
+            </div>
+          )}
+
           <div style={{ marginBottom: "1rem" }}>
             <label style={{ fontSize: "0.875rem" }}>
-              Display Name
+              Username
               <input
-                value={form.display}
-                onChange={(e) => form.setDisplay(e.target.value)}
+                value={form.username}
+                onChange={(e) => form.setUsername(e.target.value)}
                 style={inputStyle}
-                placeholder="Your name"
+                placeholder={form.isSignup ? "at least 3 characters" : "username"}
+                autoComplete="username"
               />
             </label>
           </div>
-        )}
 
-        <div style={{ marginBottom: "1rem" }}>
-          <label style={{ fontSize: "0.875rem" }}>
-            Username
-            <input
-              value={form.username}
-              onChange={(e) => form.setUsername(e.target.value)}
-              style={inputStyle}
-              placeholder={form.isSignup ? "at least 3 characters" : "username"}
-              autoComplete="username"
-            />
-          </label>
-        </div>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <label style={{ fontSize: "0.875rem" }}>
+              Password
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => form.setPassword(e.target.value)}
+                style={inputStyle}
+                placeholder={form.isSignup ? "at least 6 characters" : "password"}
+                autoComplete={form.isSignup ? "new-password" : "current-password"}
+              />
+            </label>
+          </div>
 
-        <div style={{ marginBottom: "1.5rem" }}>
-          <label style={{ fontSize: "0.875rem" }}>
-            Password
-            <input
-              type="password"
-              value={form.password}
-              onChange={(e) => form.setPassword(e.target.value)}
-              style={inputStyle}
-              placeholder={form.isSignup ? "at least 6 characters" : "password"}
-              autoComplete={form.isSignup ? "new-password" : "current-password"}
-            />
-          </label>
-        </div>
+          {form.success && (
+            <p style={{ color: "#3fb950", marginBottom: "1rem", fontSize: "0.875rem",
+                        background: "#1a4731", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
+              {form.success}
+            </p>
+          )}
 
-        {form.success && (
-          <p style={{ color: "#3fb950", marginBottom: "1rem", fontSize: "0.875rem",
-                      background: "#1a4731", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
-            {form.success}
-          </p>
-        )}
+          {form.error && (
+            <p style={{ color: "#f85149", marginBottom: "1rem", fontSize: "0.875rem" }}>{form.error}</p>
+          )}
 
-        {form.error && (
-          <p style={{ color: "#f85149", marginBottom: "1rem", fontSize: "0.875rem" }}>{form.error}</p>
-        )}
-
-        <button
-          onClick={form.submit}
-          disabled={form.loading}
-          style={{
-            width: "100%",
-            padding: "0.75rem",
-            background: form.loading ? "#555" : "#238636",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: form.loading ? "not-allowed" : "pointer",
-            fontSize: "1rem",
-          }}
-        >
-          {form.loading ? "Loading..." : form.isSignup ? "Sign Up" : "Sign In"}
-        </button>
+          <button
+            type="submit"
+            disabled={form.loading}
+            style={{
+              width: "100%",
+              padding: "0.75rem",
+              background: form.loading ? "#555" : "#238636",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: form.loading ? "not-allowed" : "pointer",
+              fontSize: "1rem",
+            }}
+          >
+            {form.loading ? "Loading..." : form.isSignup ? "Sign Up" : "Sign In"}
+          </button>
+        </form>
 
         <button
           onClick={() => form.setIsSignup(!form.isSignup)}

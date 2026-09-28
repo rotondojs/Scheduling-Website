@@ -26,3 +26,23 @@ export interface SessionRecord {
   status: "open" | "full" | "cancelled" | "completed";
   createdAt: DateISO;
 }
+
+export interface GroupRecord {
+  name: string;
+  members: RecordId[];
+  createdBy: RecordId;
+  createdAt: DateISO;
+}
+
+export interface MessageRecord {
+  groupId: RecordId;
+  senderId: RecordId;
+  senderUsername: string;
+  content: string;
+  type: "text" | "session_invite";
+  sessionId?: RecordId;
+  sessionTitle?: string;
+  sessionGame?: string;
+  sessionScheduledAt?: string;
+  createdAt: DateISO;
+}

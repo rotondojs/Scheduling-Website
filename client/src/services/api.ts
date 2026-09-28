@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { UserInfo, SessionInfo, CreateSessionRequest } from "@gameschedule/shared";
+import type { UserInfo, SessionInfo, CreateSessionRequest, GroupInfo, MessageInfo } from "@gameschedule/shared";
 
 const api = axios.create({ baseURL: "/api" });
 
@@ -99,6 +99,57 @@ export async function getUserSessions(userId: string): Promise<SessionInfo[]> {
   try {
     const { data } = await api.get(`/session/user/${userId}`);
     return data.sessions;
+  } catch (e) {
+    throw new Error(getErrorMessage(e));
+  }
+}
+
+// --- Groups ---
+
+export async function createGroup(
+  name: string,
+  memberUsernames: string[],
+  username: string,
+  password: string
+): Promise<GroupInfo> {
+  try {
+    const { data } = await api.post("/group/create", {
+      name,
+      memberUsernames,
+      ...withAuth(username, password),
+    });
+    return data.group;
+  } catch (e) {
+    throw new Error(getErrorMessage(e));
+  }
+}
+
+export async function getUserGroups(userId: string): Promise<GroupInfo[]> {
+  const { data } = await api.get("/group/list", { params: { userId } });
+  return data.groups;
+}
+
+export async function getGroupMessages(groupId: string): Promise<MessageInfo[]> {
+  const { data } = await api.get(`/group/${groupId}/messages`);
+  return data.messages;
+}
+
+export async function sendGroupMessage(
+  groupId: string,
+  content: string,
+  type: "text" | "session_invite",
+  username: string,
+  password: string,
+  sessionId?: string
+): Promise<MessageInfo> {
+  try {
+    const { data } = await api.post(`/group/${groupId}/message`, {
+      content,
+      type,
+      sessionId,
+      ...withAuth(username, password),
+    });
+    return data.message;
   } catch (e) {
     throw new Error(getErrorMessage(e));
   }

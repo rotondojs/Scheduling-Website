@@ -19,17 +19,14 @@ export async function createSession(
 export async function getSessions(): Promise<SessionInfo[]> {
   const keys = await SessionRepo.getAllKeys();
   if (keys.length === 0) return [];
-  const records = await SessionRepo.getMany(keys);
-  return Promise.all(
-    records.map(async (r, i) => {
-      const user = await UserRepo.find(r.createdBy);
-      return {
-        id: keys[i],
-        ...r,
-        createdByUsername: user?.username ?? "unknown",
-      };
-    })
-  );
+  const results: SessionInfo[] = [];
+  for (const key of keys) {
+    const r = await SessionRepo.find(key);
+    if (!r) continue;
+    const user = await UserRepo.find(r.createdBy);
+    results.push({ id: key, ...r, createdByUsername: user?.username ?? "unknown" });
+  }
+  return results;
 }
 
 export async function getSessionById(id: string): Promise<SessionInfo | null> {

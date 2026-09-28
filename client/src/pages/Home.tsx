@@ -8,6 +8,7 @@ export default function Home() {
   const { data: sessions } = useSessions();
 
   const upcoming = (sessions ?? [])
+    .filter((s) => s?.title && s?.scheduledAt)
     .filter((s) => dayjs(s.scheduledAt).isAfter(dayjs()) && s.status !== "cancelled")
     .sort((a, b) => dayjs(a.scheduledAt).diff(dayjs(b.scheduledAt)))
     .slice(0, 6);

@@ -4,6 +4,7 @@ const links = [
   { to: "/", label: "Home" },
   { to: "/sessions", label: "Browse Sessions" },
   { to: "/sessions/new", label: "Create Session" },
+  { to: "/groups", label: "Group Chats" },
   { to: "/stats", label: "Game Stats" },
 ];
 
