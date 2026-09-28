@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { AuthContext } from "../contexts/LoginContext.ts";
 import { useLoginForm } from "../hooks/useLoginForm.ts";
 
@@ -19,7 +20,14 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function Login({ setAuth }: Props) {
-  const form = useLoginForm(setAuth);
+  const navigate = useNavigate();
+
+  function handleSetAuth(auth: AuthContext) {
+    setAuth(auth);
+    navigate("/");
+  }
+
+  const form = useLoginForm(handleSetAuth);
 
   return (
     <div
