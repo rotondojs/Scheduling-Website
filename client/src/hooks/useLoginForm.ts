@@ -12,6 +12,14 @@ export function useLoginForm(setAuth: (auth: AuthContext) => void) {
 
   async function submit() {
     setError(null);
+
+    // Client-side validation to catch issues before hitting the server
+    if (isSignup) {
+      if (username.length < 3) return setError("Username must be at least 3 characters.");
+      if (password.length < 6) return setError("Password must be at least 6 characters.");
+      if (!display.trim()) return setError("Display name is required.");
+    }
+
     setLoading(true);
     try {
       let user;
@@ -21,8 +29,8 @@ export function useLoginForm(setAuth: (auth: AuthContext) => void) {
         user = await api.login(username, password);
       }
       setAuth({ user, pass: password, reset: () => {} });
-    } catch {
-      setError(isSignup ? "Signup failed. Username may be taken." : "Invalid username or password.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }

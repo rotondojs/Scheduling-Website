@@ -71,7 +71,7 @@ export default function Login({ setAuth }: Props) {
               value={form.username}
               onChange={(e) => form.setUsername(e.target.value)}
               style={inputStyle}
-              placeholder="username"
+              placeholder={form.isSignup ? "at least 3 characters" : "username"}
               autoComplete="username"
             />
           </label>
@@ -85,7 +85,7 @@ export default function Login({ setAuth }: Props) {
               value={form.password}
               onChange={(e) => form.setPassword(e.target.value)}
               style={inputStyle}
-              placeholder="password"
+              placeholder={form.isSignup ? "at least 6 characters" : "password"}
               autoComplete={form.isSignup ? "new-password" : "current-password"}
             />
           </label>
