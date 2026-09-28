@@ -58,11 +58,15 @@ export async function createSession(
   username: string,
   password: string
 ): Promise<SessionInfo> {
-  const { data } = await api.post("/session/create", {
-    ...req,
-    ...withAuth(username, password),
-  });
-  return data.session;
+  try {
+    const { data } = await api.post("/session/create", {
+      ...req,
+      ...withAuth(username, password),
+    });
+    return data.session;
+  } catch (e) {
+    throw new Error(getErrorMessage(e));
+  }
 }
 
 export async function joinSession(
@@ -70,8 +74,12 @@ export async function joinSession(
   username: string,
   password: string
 ): Promise<SessionInfo> {
-  const { data } = await api.post(`/session/${id}/join`, withAuth(username, password));
-  return data.session;
+  try {
+    const { data } = await api.post(`/session/${id}/join`, withAuth(username, password));
+    return data.session;
+  } catch (e) {
+    throw new Error(getErrorMessage(e));
+  }
 }
 
 export async function leaveSession(
@@ -79,11 +87,19 @@ export async function leaveSession(
   username: string,
   password: string
 ): Promise<SessionInfo> {
-  const { data } = await api.post(`/session/${id}/leave`, withAuth(username, password));
-  return data.session;
+  try {
+    const { data } = await api.post(`/session/${id}/leave`, withAuth(username, password));
+    return data.session;
+  } catch (e) {
+    throw new Error(getErrorMessage(e));
+  }
 }
 
 export async function getUserSessions(userId: string): Promise<SessionInfo[]> {
-  const { data } = await api.get(`/session/user/${userId}`);
-  return data.sessions;
+  try {
+    const { data } = await api.get(`/session/user/${userId}`);
+    return data.sessions;
+  } catch (e) {
+    throw new Error(getErrorMessage(e));
+  }
 }

@@ -26,11 +26,18 @@ export function useUserSessions(userId: string) {
 }
 
 export function useCreateSession() {
-  const { user, pass } = useAuth();
+  const { user, pass, reset } = useAuth();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (req: CreateSessionRequest) => api.createSession(req, user.username, pass),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["sessions"] }),
+    onError: (err: Error) => {
+      // If the server says our credentials are invalid (e.g. server restarted and
+      // lost in-memory data), log the user out so they can sign in again fresh.
+      if (err.message === "Unauthorized") {
+        reset();
+      }
+    },
   });
 }
 

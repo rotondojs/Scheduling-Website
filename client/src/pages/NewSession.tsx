@@ -56,16 +56,20 @@ export default function NewSession() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Combine the separate date + time fields into one ISO string
-    const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
-    const session = await createSession.mutateAsync({
-      title,
-      game: game === "Other" ? customGame : game,
-      description,
-      scheduledAt,
-      maxPlayers,
-    });
-    navigate(`/sessions/${session.id}`);
+    try {
+      // Combine the separate date + time fields into one ISO string
+      const scheduledAt = new Date(`${date}T${time}:00`).toISOString();
+      const session = await createSession.mutateAsync({
+        title,
+        game: game === "Other" ? customGame : game,
+        description,
+        scheduledAt,
+        maxPlayers,
+      });
+      navigate(`/sessions/${session.id}`);
+    } catch {
+      // error is displayed via createSession.error below
+    }
   }
 
   return (
@@ -169,7 +173,11 @@ export default function NewSession() {
         </label>
 
         {createSession.error && (
-          <p style={{ color: "#f85149", margin: 0 }}>Failed to create session. Try again.</p>
+          <p style={{ color: "#f85149", margin: 0 }}>
+            {createSession.error.message === "Unauthorized"
+              ? "Your session expired. You have been logged out — please sign in again."
+              : createSession.error.message}
+          </p>
         )}
 
         <button
