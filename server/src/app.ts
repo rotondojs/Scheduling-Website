@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import * as http from "node:http";
 import * as user from "./controllers/user.controller.ts";
 import * as session from "./controllers/session.controller.ts";
+import * as stats from "./controllers/stats.controller.ts";
 
 export const app = express();
 export const httpServer = http.createServer(app);
@@ -31,6 +32,13 @@ app.use(
         .get("/:id", session.getById)
         .post("/:id/join", session.postJoin)
         .post("/:id/leave", session.postLeave),
+    )
+    .use(
+      "/stats",
+      express.Router()
+        .get("/fortnite", stats.getFortniteStats)
+        .get("/steam", stats.getSteamStats)
+        .get("/apex", stats.getApexStats),
     ),
 );
 

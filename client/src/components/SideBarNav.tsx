@@ -4,6 +4,7 @@ const links = [
   { to: "/", label: "Home" },
   { to: "/sessions", label: "Browse Sessions" },
   { to: "/sessions/new", label: "Create Session" },
+  { to: "/stats", label: "Game Stats" },
 ];
 
 export default function SideBarNav() {
