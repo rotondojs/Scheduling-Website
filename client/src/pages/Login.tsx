@@ -99,6 +99,13 @@ export default function Login({ setAuth }: Props) {
           </label>
         </div>
 
+        {form.success && (
+          <p style={{ color: "#3fb950", marginBottom: "1rem", fontSize: "0.875rem",
+                      background: "#1a4731", padding: "0.5rem 0.75rem", borderRadius: "6px" }}>
+            {form.success}
+          </p>
+        )}
+
         {form.error && (
           <p style={{ color: "#f85149", marginBottom: "1rem", fontSize: "0.875rem" }}>{form.error}</p>
         )}

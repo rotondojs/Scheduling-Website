@@ -8,12 +8,13 @@ export function useLoginForm(setAuth: (auth: AuthContext) => void) {
   const [display, setDisplay] = useState("");
   const [isSignup, setIsSignup] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function submit() {
     setError(null);
+    setSuccess(null);
 
-    // Client-side validation to catch issues before hitting the server
     if (isSignup) {
       if (username.length < 3) return setError("Username must be at least 3 characters.");
       if (password.length < 6) return setError("Password must be at least 6 characters.");
@@ -22,13 +23,16 @@ export function useLoginForm(setAuth: (auth: AuthContext) => void) {
 
     setLoading(true);
     try {
-      let user;
       if (isSignup) {
-        user = await api.signup(username, password, display);
+        await api.signup(username, password, display);
+        setIsSignup(false);
+        setDisplay("");
+        setPassword("");
+        setSuccess("Account created! Please sign in.");
       } else {
-        user = await api.login(username, password);
+        const user = await api.login(username, password);
+        setAuth({ user, pass: password, reset: () => {} });
       }
-      setAuth({ user, pass: password, reset: () => {} });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -41,6 +45,6 @@ export function useLoginForm(setAuth: (auth: AuthContext) => void) {
     password, setPassword,
     display, setDisplay,
     isSignup, setIsSignup,
-    error, loading, submit,
+    error, success, loading, submit,
   };
 }
