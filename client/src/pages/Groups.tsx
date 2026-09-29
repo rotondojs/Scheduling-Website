@@ -1,9 +1,144 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useGroups, useGroupMessages, useCreateGroup, useSendMessage } from "../hooks/useGroups.ts";
 import { useSessions } from "../hooks/useSessions.ts";
+import { useFriends } from "../hooks/useFriends.ts";
 import { useAuth } from "../hooks/useAuth.ts";
+import * as api from "../services/api.ts";
 import dayjs from "dayjs";
-import type { GroupInfo, MessageInfo } from "@gameschedule/shared";
+import type { GroupInfo, MessageInfo, UserInfo } from "@gameschedule/shared";
+
+// ---------------------------------------------------------------------------
+// Member search dropdown (friends first, then others)
+// ---------------------------------------------------------------------------
+
+function MemberSearchDropdown({
+  selected,
+  onAdd,
+  onRemove,
+}: {
+  selected: UserInfo[];
+  onAdd: (u: UserInfo) => void;
+  onRemove: (id: string) => void;
+}) {
+  const { user } = useAuth();
+  const { data: friends = [] } = useFriends();
+  const friendIds = new Set(friends.map((f) => f.id));
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<UserInfo[]>([]);
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selectedIds = new Set(selected.map((u) => u.id));
+
+  const doSearch = useCallback(async (q: string) => {
+    const users = await api.searchUsers(q, user.id);
+    setResults(users);
+    setOpen(true);
+  }, [user.id]);
+
+  useEffect(() => {
+    doSearch(query);
+  }, [query, doSearch]);
+
+  // Close on outside click
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
+
+  // Sort: friends first, then others, both alphabetically
+  const sorted = [...results].sort((a, b) => {
+    const aFriend = friendIds.has(a.id);
+    const bFriend = friendIds.has(b.id);
+    if (aFriend && !bFriend) return -1;
+    if (!aFriend && bFriend) return 1;
+    return a.username.localeCompare(b.username);
+  });
+
+  return (
+    <div ref={containerRef} style={{ position: "relative" }}>
+      {/* Selected chips */}
+      {selected.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem", marginBottom: "0.5rem" }}>
+          {selected.map((u) => (
+            <span
+              key={u.id}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                background: friendIds.has(u.id) ? "#0f3460" : "#21262d",
+                border: `1px solid ${friendIds.has(u.id) ? "#58a6ff" : "#30363d"}`,
+                borderRadius: "20px", padding: "2px 10px", fontSize: "0.8rem", color: "white",
+              }}
+            >
+              {friendIds.has(u.id) && <span style={{ color: "#3fb950", fontSize: "0.7rem" }}>★</span>}
+              {u.username}
+              <button
+                type="button"
+                onClick={() => onRemove(u.id)}
+                style={{ background: "none", border: "none", color: "#8b949e", cursor: "pointer", padding: 0, fontSize: "0.85rem", lineHeight: 1 }}
+              >×</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        onFocus={() => doSearch(query)}
+        placeholder="Search for friends or users to add..."
+        style={inputStyle}
+        autoComplete="off"
+      />
+
+      {open && sorted.length > 0 && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 200,
+          background: "#161b22", border: "1px solid #30363d", borderRadius: "8px",
+          maxHeight: "220px", overflowY: "auto", boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+        }}>
+          {sorted.filter((u) => !selectedIds.has(u.id)).map((u) => {
+            const isFriend = friendIds.has(u.id);
+            return (
+              <div
+                key={u.id}
+                onMouseDown={(e) => { e.preventDefault(); onAdd(u); setQuery(""); }}
+                style={{
+                  padding: "0.6rem 1rem", cursor: "pointer",
+                  borderBottom: "1px solid #21262d",
+                  background: "transparent",
+                  display: "flex", alignItems: "center", gap: "0.6rem",
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#21262d")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                {isFriend && (
+                  <span style={{ color: "#3fb950", fontSize: "0.75rem", fontWeight: "bold" }}>★</span>
+                )}
+                <div>
+                  <span style={{ fontWeight: isFriend ? "bold" : "normal", color: isFriend ? "#c9d1d9" : "#a0aec0" }}>
+                    {u.username}
+                  </span>
+                  <span style={{ color: "#8b949e", fontSize: "0.8rem", marginLeft: "0.4rem" }}>{u.display}</span>
+                  {isFriend && (
+                    <span style={{ marginLeft: "0.5rem", fontSize: "0.7rem", color: "#3fb950", background: "#1a4731", padding: "1px 6px", borderRadius: "10px" }}>
+                      Friend
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // New Group modal
@@ -11,17 +146,13 @@ import type { GroupInfo, MessageInfo } from "@gameschedule/shared";
 
 function NewGroupModal({ onClose }: { onClose: () => void }) {
   const [name, setName] = useState("");
-  const [membersInput, setMembersInput] = useState("");
+  const [members, setMembers] = useState<UserInfo[]>([]);
   const createGroup = useCreateGroup();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const usernames = membersInput
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
     try {
-      await createGroup.mutateAsync({ name, memberUsernames: usernames });
+      await createGroup.mutateAsync({ name, memberUsernames: members.map((m) => m.username) });
       onClose();
     } catch {
       // error shown below
@@ -36,7 +167,7 @@ function NewGroupModal({ onClose }: { onClose: () => void }) {
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: "12px", padding: "2rem", width: "400px" }}>
+      <div style={{ background: "#161b22", border: "1px solid #30363d", borderRadius: "12px", padding: "2rem", width: "440px" }}>
         <h2 style={{ marginTop: 0 }}>New Group Chat</h2>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <label style={labelStyle}>
@@ -49,15 +180,19 @@ function NewGroupModal({ onClose }: { onClose: () => void }) {
               style={inputStyle}
             />
           </label>
-          <label style={labelStyle}>
-            Add Members (comma-separated usernames)
-            <input
-              value={membersInput}
-              onChange={(e) => setMembersInput(e.target.value)}
-              placeholder="e.g. alice, bob, charlie"
-              style={inputStyle}
-            />
-          </label>
+          <div style={labelStyle}>
+            Add Members
+            <div style={{ marginTop: "0.25rem" }}>
+              <MemberSearchDropdown
+                selected={members}
+                onAdd={(u) => setMembers((prev) => [...prev, u])}
+                onRemove={(id) => setMembers((prev) => prev.filter((m) => m.id !== id))}
+              />
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "#8b949e", marginTop: "0.3rem" }}>
+              ★ = Friend · Friends appear at the top of results
+            </div>
+          </div>
           {createGroup.error && (
             <p style={{ color: "#f85149", margin: 0, fontSize: "0.875rem" }}>
               {createGroup.error.message}

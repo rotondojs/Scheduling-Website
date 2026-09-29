@@ -7,6 +7,7 @@ import * as user from "./controllers/user.controller.ts";
 import * as session from "./controllers/session.controller.ts";
 import * as stats from "./controllers/stats.controller.ts";
 import * as group from "./controllers/group.controller.ts";
+import * as friend from "./controllers/friend.controller.ts";
 
 export const app = express();
 export const httpServer = http.createServer(app);
@@ -22,6 +23,7 @@ app.use(
       express.Router()
         .post("/signup", user.postSignup)
         .post("/login", user.postLogin)
+        .get("/search", user.searchUsers)
         .get("/:username", user.getByUsername),
     )
     .use(
@@ -40,6 +42,15 @@ app.use(
         .get("/fortnite", stats.getFortniteStats)
         .get("/steam", stats.getSteamStats)
         .get("/apex", stats.getApexStats),
+    )
+    .use(
+      "/friend",
+      express.Router()
+        .post("/request", friend.postSendRequest)
+        .post("/respond", friend.postRespond)
+        .post("/remove", friend.postRemove)
+        .get("/list", friend.getFriends)
+        .get("/inbox", friend.getInbox),
     )
     .use(
       "/group",
@@ -68,6 +79,14 @@ io.on("connection", (socket) => {
 
   socket.on("groupUnwatch", (groupId: string) => {
     socket.leave(`group:${groupId}`);
+  });
+
+  socket.on("userWatch", (userId: string) => {
+    socket.join(`user:${userId}`);
+  });
+
+  socket.on("userUnwatch", (userId: string) => {
+    socket.leave(`user:${userId}`);
   });
 
   socket.on("disconnect", () => {

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { UserInfo, SessionInfo, CreateSessionRequest, GroupInfo, MessageInfo } from "@gameschedule/shared";
+import type { UserInfo, SessionInfo, CreateSessionRequest, GroupInfo, MessageInfo, FriendInfo, FriendRequestInfo } from "@gameschedule/shared";
 
 const api = axios.create({ baseURL: "/api" });
 
@@ -102,6 +102,45 @@ export async function getUserSessions(userId: string): Promise<SessionInfo[]> {
   } catch (e) {
     throw new Error(getErrorMessage(e));
   }
+}
+
+// --- User search ---
+
+export async function searchUsers(q: string, excludeId: string): Promise<UserInfo[]> {
+  const { data } = await api.get("/user/search", { params: { q, excludeId } });
+  return data.users;
+}
+
+// --- Friends ---
+
+export async function sendFriendRequest(toUsername: string, username: string, password: string): Promise<void> {
+  try {
+    await api.post("/friend/request", { toUsername, ...withAuth(username, password) });
+  } catch (e) { throw new Error(getErrorMessage(e)); }
+}
+
+export async function respondToFriendRequest(
+  requestId: string, action: "accept" | "reject", username: string, password: string
+): Promise<void> {
+  try {
+    await api.post("/friend/respond", { requestId, action, ...withAuth(username, password) });
+  } catch (e) { throw new Error(getErrorMessage(e)); }
+}
+
+export async function removeFriend(friendId: string, username: string, password: string): Promise<void> {
+  try {
+    await api.post("/friend/remove", { friendId, ...withAuth(username, password) });
+  } catch (e) { throw new Error(getErrorMessage(e)); }
+}
+
+export async function getFriends(userId: string): Promise<FriendInfo[]> {
+  const { data } = await api.get("/friend/list", { params: { userId } });
+  return data.friends;
+}
+
+export async function getFriendInbox(userId: string): Promise<FriendRequestInfo[]> {
+  const { data } = await api.get("/friend/inbox", { params: { userId } });
+  return data.requests;
 }
 
 // --- Groups ---

@@ -55,3 +55,20 @@ export async function getByUsername(req: Request, res: Response) {
   }
   res.status(404).json({ error: "User not found" });
 }
+
+export async function searchUsers(req: Request, res: Response) {
+  const q = ((req.query.q as string) ?? "").toLowerCase().trim();
+  const excludeId = (req.query.excludeId as string) ?? "";
+  const keys = await UserRepo.getAllKeys();
+  const results = [];
+  for (const key of keys) {
+    if (key === excludeId) continue;
+    const u = await userService.getUserById(key);
+    if (!u) continue;
+    if (!q || u.username.toLowerCase().includes(q) || u.display.toLowerCase().includes(q)) {
+      results.push(u);
+    }
+  }
+  results.sort((a, b) => a.username.localeCompare(b.username));
+  res.json({ users: results.slice(0, 30) });
+}

@@ -34,6 +34,16 @@ export interface GroupRecord {
   createdAt: DateISO;
 }
 
+export interface FriendRecord {
+  fromId: RecordId;
+  fromUsername: string;
+  fromDisplay: string;
+  toId: RecordId;
+  toUsername: string;
+  status: "pending" | "accepted";
+  createdAt: DateISO;
+}
+
 export interface MessageRecord {
   groupId: RecordId;
   senderId: RecordId;

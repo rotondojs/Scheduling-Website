@@ -12,6 +12,7 @@ import SessionPage from "./pages/SessionPage.tsx";
 import Profile from "./pages/Profile.tsx";
 import GameStats from "./pages/GameStats.tsx";
 import Groups from "./pages/Groups.tsx";
+import Friends from "./pages/Friends.tsx";
 
 const STORAGE_KEY = "gameschedule-auth";
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="/profile/:username" element={<Profile />} />
             <Route path="/stats" element={<GameStats />} />
             <Route path="/groups" element={<Groups />} />
+            <Route path="/friends" element={<Friends />} />
           </Route>
         </Routes>
       </BrowserRouter>
